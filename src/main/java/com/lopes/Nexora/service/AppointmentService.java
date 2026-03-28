@@ -1,5 +1,8 @@
 package com.lopes.Nexora.service;
 
+import com.lopes.Nexora.dto.AppointmentRequestDTO;
+import com.lopes.Nexora.dto.AppointmentResponseDTO;
+import com.lopes.Nexora.dto.AppointmentUpdateDTO;
 import com.lopes.Nexora.infrastructure.entity.Appointment;
 import com.lopes.Nexora.infrastructure.repository.AppointmentRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +18,8 @@ import java.util.Objects;
 public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
 
-    public Appointment saveAppointment(Appointment appointment){
+    public AppointmentResponseDTO saveAppointment(AppointmentRequestDTO dto){
+        Appointment appointment = new Appointment(dto);
         LocalDateTime startTime = appointment.getScheduledDateTime();
         LocalDateTime endTime = startTime.plusHours(1);
 
@@ -31,29 +35,34 @@ public class AppointmentService {
         if (Objects.nonNull(scheduled)){
             throw new IllegalArgumentException("Slot busy for this service");
         }
-
-        return appointmentRepository.save(appointment);
+        Appointment saved = appointmentRepository.save(appointment);
+        return new AppointmentResponseDTO(saved);
     }
 
     public void deleteByClient(LocalDateTime scheduledDateTime, String client){
         appointmentRepository.deleteByClientAndScheduledDateTime(client, scheduledDateTime);
     }
 
-    public List<Appointment> getAppointmentsByDay(LocalDate date){
+    public List<AppointmentResponseDTO> getAppointmentsByDay(LocalDate date){
         LocalDateTime startTimeDay = date.atStartOfDay();
         LocalDateTime endTimeDay = date.atTime(23,59,59);
-        return appointmentRepository.findByScheduledDateTimeBetween(startTimeDay, endTimeDay);
+        List<Appointment> entities = appointmentRepository.findByScheduledDateTimeBetween(startTimeDay, endTimeDay);
+        return entities.stream().map(AppointmentResponseDTO::new).toList();
     }
 
-    public Appointment updateAppointment(Appointment updatedAppointment, String client, LocalDateTime scheduledDateTime){
+    public AppointmentResponseDTO updateAppointment(AppointmentUpdateDTO dto, String client, LocalDateTime scheduledDateTime){
         Appointment existing = appointmentRepository.findByClientAndScheduledDateTime(client, scheduledDateTime)
                 .orElseThrow(() -> new IllegalArgumentException("Appointment not found"));
 
-        if (updatedAppointment.getScheduledDateTime().isBefore(LocalDateTime.now())){
+        if (dto.scheduledDateTime().isBefore(LocalDateTime.now())){
             throw new IllegalArgumentException("Cannot reschedule to past");
         }
 
-        updatedAppointment.setId(existing.getId());
-        return appointmentRepository.save(updatedAppointment);
+        existing.setService(dto.service());
+        existing.setProfessional(dto.professional());
+        existing.setScheduledDateTime(dto.scheduledDateTime());
+
+        Appointment saved = appointmentRepository.save(existing);
+        return new AppointmentResponseDTO(saved);
     }
 }

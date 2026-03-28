@@ -1,7 +1,11 @@
 package com.lopes.Nexora.controller;
 
+import com.lopes.Nexora.dto.AppointmentRequestDTO;
+import com.lopes.Nexora.dto.AppointmentResponseDTO;
+import com.lopes.Nexora.dto.AppointmentUpdateDTO;
 import com.lopes.Nexora.infrastructure.entity.Appointment;
 import com.lopes.Nexora.service.AppointmentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,8 +21,8 @@ public class AppointmentController {
     private final AppointmentService appointmentService;
 
     @PostMapping
-    public ResponseEntity<Appointment> saveAppointment(@RequestBody Appointment appointment){
-        return ResponseEntity.ok().body(appointmentService.saveAppointment(appointment));
+    public ResponseEntity<AppointmentResponseDTO> saveAppointment(@RequestBody @Valid AppointmentRequestDTO dto){
+        return ResponseEntity.ok().body(appointmentService.saveAppointment(dto));
     }
 
     @DeleteMapping
@@ -29,15 +33,15 @@ public class AppointmentController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Appointment>> getByDay(@RequestParam LocalDate date){
+    public ResponseEntity<List<AppointmentResponseDTO>> getByDay(@RequestParam LocalDate date){
         return ResponseEntity.ok().body(appointmentService.getAppointmentsByDay(date));
     }
 
     @PutMapping
-    public ResponseEntity<Appointment> updateAppointment(@RequestBody Appointment appointment,
+    public ResponseEntity<AppointmentResponseDTO> updateAppointment(@RequestBody @Valid AppointmentUpdateDTO dto,
                                                          @RequestParam String client,
                                                          @RequestParam LocalDateTime scheduledDateTime){
         return ResponseEntity.accepted().body(appointmentService
-                .updateAppointment(appointment, client, scheduledDateTime));
+                .updateAppointment(dto, client, scheduledDateTime));
     }
 }

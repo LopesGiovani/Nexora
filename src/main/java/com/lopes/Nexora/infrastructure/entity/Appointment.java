@@ -1,5 +1,6 @@
 package com.lopes.Nexora.infrastructure.entity;
 
+import com.lopes.Nexora.dto.AppointmentRequestDTO;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -34,4 +35,11 @@ public class Appointment {
     @CreationTimestamp
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    public Appointment(AppointmentRequestDTO dto) {
+        this.service = dto.service();
+        this.professional = dto.professional();
+        this.scheduledDateTime = dto.scheduledDateTime();
+        this.client = dto.client();
+        this.clientPhone = dto.clientPhone();
+    }
 }
