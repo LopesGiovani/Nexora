@@ -85,3 +85,16 @@ export API_SECRET=your-secure-jwt-secret-key-here
 ```
 
 By default, the application server initializes on port `8080`.
+
+## Testing with Postman
+
+A ready-to-use Postman collection is included in the project root: `Nexora.postman_collection.json`.
+
+### How to use
+
+1. Import the file into Postman (**Import** → **Upload Files**)
+2. Run **Register** to create a user
+3. Run **Login** — the JWT token is saved automatically
+4. All other requests will use the token automatically
+
+The collection includes success and error test cases for every endpoint.

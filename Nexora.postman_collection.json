@@ -1,0 +1,333 @@
+{
+  "info": {
+    "name": "Nexora API",
+    "description": "Nexora Appointment Management API - Full test collection with JWT authentication",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints (public, no token needed)",
+      "item": [
+        {
+          "name": "1. Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"giovanni\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Register Duplicate (expect 409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"giovanni\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Login (saves token automatically)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('token', jsonData.token);",
+                  "    console.log('Token saved: ' + jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"giovanni\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Login Wrong Password (expect 401/403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"giovanni\",\n  \"password\": \"wrong_password\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Appointments",
+      "description": "Appointment CRUD endpoints (requires Bearer token)",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{token}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "1. Create Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service\": \"Haircut\",\n  \"professional\": \"Carlos\",\n  \"scheduledDateTime\": \"2026-04-15T10:00:00\",\n  \"client\": \"Maria Silva\",\n  \"clientPhone\": \"11999998888\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["appointments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2. Create Another Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service\": \"Beard Trim\",\n  \"professional\": \"Carlos\",\n  \"scheduledDateTime\": \"2026-04-15T14:00:00\",\n  \"client\": \"João Santos\",\n  \"clientPhone\": \"11988887777\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["appointments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3. Create Conflicting Slot (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service\": \"Haircut\",\n  \"professional\": \"Ana\",\n  \"scheduledDateTime\": \"2026-04-15T10:30:00\",\n  \"client\": \"Pedro Souza\",\n  \"clientPhone\": \"11977776666\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["appointments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4. Create Past Appointment (expect 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service\": \"Haircut\",\n  \"professional\": \"Carlos\",\n  \"scheduledDateTime\": \"2020-01-01T10:00:00\",\n  \"client\": \"Test Client\",\n  \"clientPhone\": \"11900000000\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["appointments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5. Get All Appointments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["appointments"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "6. Get Appointments by Day",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/appointments?date=2026-04-15",
+              "host": ["{{baseUrl}}"],
+              "path": ["appointments"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-04-15"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "7. Update Appointment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service\": \"Premium Haircut\",\n  \"professional\": \"Ana\",\n  \"scheduledDateTime\": \"2026-04-16T11:00:00\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/appointments?client=Maria Silva&scheduledDateTime=2026-04-15T10:00:00",
+              "host": ["{{baseUrl}}"],
+              "path": ["appointments"],
+              "query": [
+                {
+                  "key": "client",
+                  "value": "Maria Silva"
+                },
+                {
+                  "key": "scheduledDateTime",
+                  "value": "2026-04-15T10:00:00"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8. Delete Appointment",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/appointments?client=João Santos&scheduledDateTime=2026-04-15T14:00:00",
+              "host": ["{{baseUrl}}"],
+              "path": ["appointments"],
+              "query": [
+                {
+                  "key": "client",
+                  "value": "João Santos"
+                },
+                {
+                  "key": "scheduledDateTime",
+                  "value": "2026-04-15T14:00:00"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "9. Access Without Token (expect 403)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["appointments"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
