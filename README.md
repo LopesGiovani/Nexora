@@ -2,80 +2,86 @@
 
 ## Overview
 
-Nexora is a backend application developed with Spring Boot designed to manage appointments. It provides a RESTful API to schedule, update, retrieve, and delete appointments efficiently. 
+Nexora is a backend application developed with Spring Boot designed to manage appointments. It provides a secure RESTful API with JWT authentication to schedule, update, retrieve, and delete appointments efficiently.
 
 ## Technology Stack
 
-The project utilizes the following core technologies:
-
 *   **Java 21**: Leveraging the latest LTS features.
-*   **Spring Boot**: Serving as the foundational framework.
+*   **Spring Boot 4**: Serving as the foundational framework.
 *   **Spring Web MVC**: Implementing the REST APIs.
 *   **Spring Data JPA**: Handling database interactions and Object-Relational Mapping (ORM).
-*   **H2 Database**: Providing an embedded, in-memory relational database.
+*   **Spring Security**: Stateless authentication with JWT tokens.
+*   **PostgreSQL**: Production-grade relational database.
+*   **Flyway**: Database schema versioning and migrations.
+*   **Auth0 java-jwt**: JWT token generation and validation.
+*   **SpringDoc OpenAPI (Swagger)**: Interactive API documentation.
 *   **Lombok**: Minimizing boilerplate code (getters, setters, constructors).
 *   **Maven**: Managing project dependencies and build lifecycle.
 
 ## Project Structure
 
-The project implements a standardized layered architecture focused exclusively on the **Appointment** domain:
+The project implements a layered architecture:
 
-*   **Controller (`AppointmentController`)**: Exposes the REST endpoints under the `/appointments` resource.
-*   **Service (`AppointmentService`)**: Contains the core business logic for appointment operations.
-*   **Repository (`AppointmentRepository`)**: Manages database persistence using Spring Data JPA.
-*   **Entity (`Appointment`)**: Maps the appointment data to the database table, including unique constraints to ensure a client has a single unique appointment at a specific date and time.
-*   **Exception Handling**: Utilizes a `GlobalExceptionHandler` returning `ErrorResponse` objects to standardize API error structures.
+*   **Controllers**: `AppointmentController` (CRUD) and `AuthenticationController` (login/register).
+*   **Services**: `AppointmentService` (business logic) and `AuthenticationService` (Spring Security UserDetailsService).
+*   **Repositories**: `AppointmentRepository` and `UserRepository` (Spring Data JPA).
+*   **Entities**: `Appointment` and `User` (implements `UserDetails`).
+*   **DTOs**: Java Records for request/response data integrity.
+*   **Security**: JWT filter, token service, and security configuration.
+*   **Exception Handling**: `GlobalExceptionHandler` with structured `ErrorResponse` objects.
 
 ## API Endpoints
 
-The application exposes the following endpoints for managing appointments:
+### Authentication (Public)
 
-### 1. Create Appointment
-*   **URL**: `/appointments`
-*   **Method**: `POST`
-*   **Description**: Registers a new appointment.
-*   **Request Body**: Expects an `Appointment` JSON object (fields: `service`, `professional`, `scheduledDateTime`, `client`, `clientPhone`).
+| Method | URL              | Description                      |
+|--------|------------------|----------------------------------|
+| POST   | `/auth/login`    | Authenticate and receive JWT     |
+| POST   | `/auth/register` | Register a new user              |
 
-### 2. Retrieve Appointments by Day
-*   **URL**: `/appointments`
-*   **Method**: `GET`
-*   **Description**: Fetches a list of all appointments scheduled for a specific date.
-*   **Query Parameters**:
-    *   `date`: The target date (e.g., `YYYY-MM-DD`).
+### Appointments (Authenticated — requires Bearer token)
 
-### 3. Update Appointment
-*   **URL**: `/appointments`
-*   **Method**: `PUT`
-*   **Description**: Updates an existing appointment.
-*   **Query Parameters**:
-    *   `client`: The name of the client.
-    *   `scheduledDateTime`: The originally scheduled date and time.
-*   **Request Body**: Expects an `Appointment` JSON object containing the updated payload.
+| Method | URL              | Description                      |
+|--------|------------------|----------------------------------|
+| POST   | `/appointments`  | Create a new appointment         |
+| GET    | `/appointments`  | List all or filter by date       |
+| PUT    | `/appointments`  | Update an existing appointment   |
+| DELETE | `/appointments`  | Delete an appointment            |
 
-### 4. Delete Appointment
-*   **URL**: `/appointments`
-*   **Method**: `DELETE`
-*   **Description**: Deletes an appointment.
-*   **Query Parameters**:
-    *   `scheduledDateTime`: The scheduled date and time.
-    *   `client`: The name of the client.
+### API Documentation
 
-## Building and Running the Application
+*   **Swagger UI**: `http://localhost:8080/swagger-ui.html`
+*   **OpenAPI JSON**: `http://localhost:8080/v3/api-docs`
+
+## Environment Variables
+
+The following environment variables **must** be set before running the application:
+
+| Variable      | Description                          | Example                        |
+|---------------|--------------------------------------|--------------------------------|
+| `DB_HOST`     | PostgreSQL host and port             | `localhost:5432`               |
+| `DB_USERNAME` | Database username                    | `postgres`                     |
+| `DB_PASSWORD` | Database password                    | `your_password`                |
+| `API_SECRET`  | JWT signing secret (min 32+ chars)   | `a-very-long-and-secure-key`   |
+
+## Building and Running
 
 ### Prerequisites
-*   Java Development Kit (JDK) 21.
+*   Java Development Kit (JDK) 21
+*   PostgreSQL database running and accessible
 
 ### Running the Project
 
-You can resolve dependencies, build, and initiate the application using the included Maven Wrapper:
-
 ```bash
+# Set environment variables
+export DB_HOST=localhost:5432
+export DB_USERNAME=postgres
+export DB_PASSWORD=your_password
+export API_SECRET=your-secure-jwt-secret-key-here
+
+# Build and run
 ./mvnw clean install
 ./mvnw spring-boot:run
 ```
 
 By default, the application server initializes on port `8080`.
-
-### Database Access
-
-The application runs exclusively using an H2 in-memory database. While the application is running, the database can typically be accessed via a web browser using the standard Spring Boot H2 console URL (e.g., `http://localhost:8080/h2-console`) dynamically configured within standard Spring `application.properties`.

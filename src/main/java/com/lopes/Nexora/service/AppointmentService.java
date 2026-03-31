@@ -43,11 +43,21 @@ public class AppointmentService {
         appointmentRepository.deleteByClientAndScheduledDateTime(client, scheduledDateTime);
     }
 
+    public List<AppointmentResponseDTO> getAllAppointments() {
+        return appointmentRepository.findAll()
+                .stream()
+                .map(AppointmentResponseDTO::new)
+                .toList();
+    }
+
     public List<AppointmentResponseDTO> getAppointmentsByDay(LocalDate date){
         LocalDateTime startTimeDay = date.atStartOfDay();
         LocalDateTime endTimeDay = date.atTime(23,59,59);
         List<Appointment> entities = appointmentRepository.findByScheduledDateTimeBetween(startTimeDay, endTimeDay);
-        return entities.stream().map(AppointmentResponseDTO::new).toList();
+        return entities
+                .stream()
+                .map(AppointmentResponseDTO::new)
+                .toList();
     }
 
     public AppointmentResponseDTO updateAppointment(AppointmentUpdateDTO dto, String client, LocalDateTime scheduledDateTime){
@@ -56,6 +66,15 @@ public class AppointmentService {
 
         if (dto.scheduledDateTime().isBefore(LocalDateTime.now())){
             throw new IllegalArgumentException("Cannot reschedule to past");
+        }
+
+        LocalDateTime newStart = dto.scheduledDateTime();
+        LocalDateTime newEnd = newStart.plusHours(1);
+        Appointment conflict = appointmentRepository.findByServiceAndScheduledDateTimeBetween(
+                dto.service(), newStart, newEnd);
+
+        if (conflict != null && !conflict.getId().equals(existing.getId())) {
+            throw new IllegalArgumentException("Slot busy for this service");
         }
 
         existing.setService(dto.service());
